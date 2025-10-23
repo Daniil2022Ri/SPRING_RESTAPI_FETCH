@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.min.js"></script>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <script th:src="@{/js/home.js}"></script>
+    <style>
+        .row { position: absolute; width: 100%; left: 0; padding-right: 10px; }
+        .list-group-item { text-align: left; }
+        .list-group { padding-top: 20px; }
+        .form-control { max-width: 300px; max-height: 40px; font-size: 16px; margin: 0 auto; }
+        .select { max-height: 100px; }
+        .loading { position: relative; min-height: 100px; }
+        .loading::before {
+            content: "Loading...";
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.2em; color: gray;
+        }
+    </style>
+</head>
+<body>
+<main>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark justify-content-between">
+        <span class="navbar-text" id="info" sec:authentication="name"></span>
+        <ul class="nav justify-content-end">
+            <li class="nav-item">
+                <a class="nav-link" th:href="@{/logout}" style="color: #a2a2a2">Logout</a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-2">
+                <ul class="list-group list-group-flush">
+                    <li>
+                        <a sec:authorize="hasRole('ADMIN')" class="list-group-item" id="admin-area-tab"
+                           href="#admin-area" data-toggle="tab">Admin</a>
+                    </li>
+                    <li>
+                        <a class="list-group-item" id="user-area-tab"
+                           href="#user-area" data-toggle="tab">User</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-10">
+                <div class="tabs">
+                    <ul sec:authorize="hasRole('ADMIN')" class="nav nav-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="nav-users_table-link" href="#nav-users_table" data-toggle="tab">Users table</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="nav-user_form-link" href="#nav-user_form" data-toggle="tab">New user</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="tab-content border">
+                    <!-- Users Table Tab -->
+                    <div sec:authorize="hasRole('ADMIN')" class="tab-pane fade show active" id="nav-users_table">
+                        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                            <div class="navbar-brand">All users</div>
+                        </nav>
+                        <table class="table table-striped" id="tableAllUsers">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Last Name</th>
+                                <th>Age</th>
+                                <th>Email</th>
+                                <th>Roles</th>
+                                <th>Edit</th>
+                                <th>Delete</th>
+                            </tr>
+                            </thead>
+                            <tbody id="users-table-rows"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- User Info Tab -->
+                    <div class="tab-pane fade" id="user-area">
+                        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                            <div class="navbar-brand">About user</div>
+                        </nav>
+                        <table class="table table-striped" id="tableUser">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Last Name</th>
+                                <th>Age</th>
+                                <th>Email</th>
+                                <th>Roles</th>
+                            </tr>
+                            </thead>
+                            <tbody id="user-table-rows"></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Add New User Tab -->
+                    <div class="tab-pane fade text-center" id="nav-user_form">
+                        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                            <div class="navbar-brand">Add new user</div>
+                        </nav>
+                        <form id="user-addform">
+                            <div class="form-group">
+                                <label for="newUsername">Username</label>
+                                <input type="text" class="form-control" id="newUsername" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newlastName">Last Name</label>
+                                <input type="text" class="form-control" id="newlastName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newage">Age</label>
+                                <input type="number" class="form-control" id="newage" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newemail">Email</label>
+                                <input type="email" class="form-control" id="newemail" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newpassword">Password</label>
+                                <input type="password" class="form-control" id="newpassword" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="newroles">Roles</label>
+                                <select multiple class="form-control select" id="newroles" required></select>
+                            </div>
+                            <button type="submit" class="btn btn-success">Add new user</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit / Delete Modal -->
+        <div class="modal fade" id="user-profile" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit user</h5>
+                        <button type="button" class="close" data-dismiss="modal">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body text-center">
+                        <form id="user-profile-form">
+                            <input type="hidden" id="id">
+                            <div class="form-group">
+                                <label for="username">Username</label>
+                                <input type="text" class="form-control" id="username" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="lastName">Last Name</label>
+                                <input type="text" class="form-control" id="lastName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="age">Age</label>
+                                <input type="number" class="form-control" id="age" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" class="form-control" id="email" required>
+                            </div>
+                            <div class="form-group" id="password-div">
+                                <label for="password">Password</label>
+                                <input type="password" class="form-control" id="password" placeholder="Enter new password (optional)">
+                            </div>
+                            <div class="form-group">
+                                <label for="roles">Roles</label>
+                                <select multiple class="form-control" id="roles" required></select>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary submit">Edit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>
